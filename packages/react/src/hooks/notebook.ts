@@ -32,7 +32,6 @@ export function useNotebookBase() {
   const [notebook, setNotebook] = useState<ThebeNotebook | undefined>();
   // TODO move the refs to caller hooks as it does so little to maintain them in here.
   const [refs, setRefs] = useState<((node: HTMLDivElement) => void)[]>([]);
-  const [sessionAttached, setSessionAttached] = useState(false);
   const [executing, setExecuting] = useState<boolean>(false);
   const [executed, setExecuted] = useState(false);
   const [errors, setErrors] = useState<IThebeNotebookError[] | null>(null);
@@ -43,7 +42,6 @@ export function useNotebookBase() {
   useEffect(() => {
     if (!notebook || !session || !sessionReady) return;
     notebook.attachSession(session);
-    setSessionAttached(true);
   }, [notebook, session, sessionReady]);
 
   const executeAll = (options?: NotebookExecuteOptions) => {
@@ -89,8 +87,8 @@ export function useNotebookBase() {
   };
 
   return {
-    ready: !!notebook && sessionAttached,
-    attached: sessionAttached,
+    ready: !!notebook && notebook.isAttached,
+    attached: notebook?.isAttached ?? false,
     executing,
     executed,
     errors,
@@ -101,6 +99,10 @@ export function useNotebookBase() {
     executeAll,
     executeSome,
     clear,
+    reset: () => {
+      // TODO return to full original state by re-rendering original outputs
+      setExecuted(false);
+    },
     session,
   };
 }
@@ -246,62 +248,5 @@ export function useNotebookFromSource(sourceCode: string[], opts = { refsForWidg
     executeSome,
     clear,
     session,
-  };
-}
-
-/**
- * DEPRECATED - migrate to useNotebookFromSource
- */
-export function useNotebookfromSourceLegacy(sourceCode: string[]) {
-  const { core } = useThebeCore();
-  const { config } = useThebeConfig();
-
-  const [busy, setBusy] = useState<boolean>(false);
-  const [notebook, setNotebook] = useState<ThebeNotebook | undefined>();
-  const [_, setReRender] = useState({});
-  const [cellRefs] = useState<React.RefObject<HTMLDivElement>[]>(
-    Array(sourceCode.length)
-      .fill(undefined)
-      .map(() => createRef()),
-  );
-
-  useEffect(() => {
-    if (!core || !config || notebook) return;
-    setNotebook(
-      core.ThebeNotebook.fromCodeBlocks(
-        sourceCode.map((source) => ({ id: core?.shortId(), source })),
-        config,
-      ),
-    );
-  }, [core, notebook]);
-
-  const execute = () => {
-    if (!notebook) throw new Error('execute called before notebook available');
-    setBusy(true);
-    notebook.executeAll().then(() => {
-      setBusy(false);
-    });
-  };
-
-  const attach = (session: ThebeSession) => {
-    if (session.kernel == null) return;
-    if (!notebook) {
-      console.warn('attach called before notebook available');
-      return;
-    }
-    notebook?.detachSession();
-    notebook?.attachSession(session);
-    notebook?.cells.forEach((cell: IThebeCell, idx: number) => {
-      if (cellRefs[idx].current) cell.attachToDOM(cellRefs[idx].current ?? undefined);
-    });
-  };
-
-  return {
-    notebook,
-    busy,
-    execute,
-    attach,
-    cellRefs,
-    rerender: () => setReRender({}),
   };
 }

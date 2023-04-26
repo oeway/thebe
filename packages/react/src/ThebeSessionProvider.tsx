@@ -6,9 +6,11 @@ interface ThebeSessionContextData {
   name: string;
   session?: ThebeSession;
   starting: boolean;
+  restarting: boolean;
   ready: boolean;
   error?: string;
   start: () => Promise<void>;
+  restart: () => void;
   shutdown: () => Promise<void>;
 }
 
@@ -29,6 +31,8 @@ export function ThebeSessionProvider({
   const { config, server, ready: serverReady } = useThebeServer();
 
   const [starting, setStarting] = useState(false);
+  const [doRestart, setDoRestart] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [session, setSession] = useState<ThebeSession | undefined>();
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -58,12 +62,25 @@ export function ThebeSessionProvider({
     startSession();
   }, [start, starting, server, serverReady]);
 
+  useEffect(() => {
+    if (!doRestart) return;
+    setDoRestart(false);
+    if (session) {
+      session?.restart().then(() => {
+        setRestarting(false);
+      });
+    } else {
+      setRestarting(false);
+    }
+  }, [doRestart]);
+
   // shutdown session on navigate away
   useEffect(() => {
     return () => {
       if (shutdownOnUnmount) {
         session?.shutdown().then(() => {
           setReady(false);
+          setSession(undefined);
         });
       }
     };
@@ -74,6 +91,7 @@ export function ThebeSessionProvider({
       value={{
         name,
         starting,
+        restarting,
         ready,
         session,
         // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -84,10 +102,15 @@ export function ThebeSessionProvider({
             startSession();
           }
         },
+        restart: () => {
+          setDoRestart(true);
+          setRestarting(true);
+        },
         shutdown: async () => {
           if (session) {
             await session.shutdown();
             setReady(false);
+            setSession(undefined);
           }
         },
         error,
