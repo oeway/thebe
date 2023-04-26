@@ -76,6 +76,10 @@ class ThebeNotebook {
     return this.cells[this.cells.length - 1];
   }
 
+  get isAttached() {
+    return Boolean(this.session).valueOf();
+  }
+
   numCells() {
     return this.cells?.length ?? 0;
   }
