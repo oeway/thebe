@@ -61,14 +61,22 @@ Now for this repo (under root folder):
 ```bash
 cd packages/lite
 npm install
-npm install file:../../../pyodide-kernel/dist/jupyterlite-pyodide-kernel-0.1.0.tgz
-npm install file:../../../pyodide-kernel/dist/jupyterlite-pyodide-kernel-extension-0.1.0.tgz
+wget https://github.com/oeway/pyodide-kernel/releases/download/v0.1.0/jupyterlite-pyodide-kernel-0.1.0.tgz
+wget https://github.com/oeway/pyodide-kernel/releases/download/v0.1.0/jupyterlite-pyodide-kernel-extension-0.1.0.tgz
+unzip jupyterlite-pyodide-kernel-0.1.0-elfinder.zip
+npm install file:./jupyterlite-pyodide-kernel-0.1.0.tgz
+npm install file:./jupyterlite-pyodide-kernel-extension-0.1.0.tgz
+rm ./jupyterlite-pyodide-kernel-0.1.0.tgz
+rm ./jupyterlite-pyodide-kernel-extension-0.1.0.tgz
 cd ../../
+
 npm run build
 sh fetch-elfinder.sh
+# Now the lite folder is ready
 
 # In another terminal
 cd apps/simple
 npm run build
 npm run start
+cd ../../
 ```
