@@ -43,3 +43,32 @@ For more information on contributing to `thebe`, see [the `thebe` contributing d
 `thebe` was developed as a part of [OpenDreamKit](http://opendreamkit.org/) – Horizon 2020 European Research Infrastructure project (676541).
 It is currently stewarded by [the Executable Books Project](https://executablebooks.org/en/latest/#acknowledgements).
 Additional support was provided by the U.S. Department of Education Open Textbooks Pilot Program funding for the LibreTexts project (P116T180029).
+
+
+### Note for build with elFinder
+
+```bash
+git clone https://github.com/oeway/pyodide-kernel/
+# node -v
+# v20.9.0
+npm install
+npm run quickstart
+# jlpm build:prod 
+```
+
+Now for this repo (under root folder):
+
+```bash
+cd packages/lite
+npm install
+npm install file:../../../pyodide-kernel/dist/jupyterlite-pyodide-kernel-0.1.0.tgz
+npm install file:../../../pyodide-kernel/dist/jupyterlite-pyodide-kernel-extension-0.1.0.tgz
+cd ../../
+npm run build
+sh fetch-elfinder.sh
+
+# In another terminal
+cd apps/simple
+npm run build
+npm run start
+```
